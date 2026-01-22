@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
-import { Language, TranslationSchema, Employee, SurveyResponse, DashboardMetrics } from '../types.ts';
+import { Language, TranslationSchema, Employee, DashboardMetrics } from '../types.ts';
 import { supabaseService } from '../services/supabase.ts';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -18,55 +17,60 @@ const Dashboard: React.FC<DashboardProps> = ({ lang, t, user }) => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      setLoading(true);
-      const responses = await supabaseService.getAllResponses();
-      const employees = await supabaseService.getAllEmployees();
+      try {
+        setLoading(true);
+        const responses = await supabaseService.getAllResponses();
+        const employees = await supabaseService.getAllEmployees();
 
-      const totalEmployees = employees.length;
-      const totalParticipants = responses.length;
-      
-      // Breakdown by Dept
-      const deptCounts: Record<string, number> = {};
-      responses.forEach(r => {
-        const dept = r.employee?.department || 'Unknown';
-        deptCounts[dept] = (deptCounts[dept] || 0) + 1;
-      });
+        const totalEmployees = employees.length;
+        const totalParticipants = responses.length;
+        
+        // Breakdown by Dept
+        const deptCounts: Record<string, number> = {};
+        responses.forEach(r => {
+          const dept = r.employee?.department || 'Unknown';
+          deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+        });
 
-      // Breakdown by Level
-      const levelCounts: Record<string, number> = {};
-      responses.forEach(r => {
-        const level = r.employee?.level || 'Unknown';
-        levelCounts[level] = (levelCounts[level] || 0) + 1;
-      });
+        // Breakdown by Level
+        const levelCounts: Record<string, number> = {};
+        responses.forEach(r => {
+          const level = r.employee?.level || 'Unknown';
+          levelCounts[level] = (levelCounts[level] || 0) + 1;
+        });
 
-      // Engagement Score (avg of q1 rating)
-      const scores = responses.map(r => r.answers['q1']).filter(v => typeof v === 'number');
-      const engagementScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0;
+        // Engagement Score (avg of q1 rating)
+        const scores = responses.map(r => r.answers['q1']).filter(v => typeof v === 'number');
+        const engagementScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0;
 
-      // Non participants
-      const participantsEmails = new Set(responses.map(r => r.email));
-      const nonParticipants = employees.filter(e => !participantsEmails.has(e.email));
+        // Non participants
+        const participantsEmails = new Set(responses.map(r => r.email));
+        const nonParticipants = employees.filter(e => !participantsEmails.has(e.email));
 
-      // Feedback (only show if > 3 responses to maintain anonymity as per HR policy)
-      const feedbacks = responses
-        .map(r => r.answers['q2'])
-        .filter(f => f && f.length > 0);
+        // Feedback (only show if > 3 responses to maintain anonymity as per HR policy)
+        const feedbacks = responses
+          .map(r => r.answers['q2'])
+          .filter(f => f && typeof f === 'string' && f.trim().length > 0);
 
-      setData({
-        totalParticipants,
-        participationRate: totalEmployees > 0 ? Math.round((totalParticipants / totalEmployees) * 100) : 0,
-        engagementScore: Number(engagementScore),
-        departmentBreakdown: deptCounts,
-        levelBreakdown: levelCounts,
-        monthlyTrend: [
-          { month: 'Jan', count: 0 },
-          { month: 'Feb', count: 0 },
-          { month: 'Mar', count: totalParticipants } // Mock trend
-        ],
-        anonymizedFeedback: feedbacks.length >= 3 ? feedbacks : [],
-        nonParticipants
-      });
-      setLoading(false);
+        setData({
+          totalParticipants,
+          participationRate: totalEmployees > 0 ? Math.round((totalParticipants / totalEmployees) * 100) : 0,
+          engagementScore: Number(engagementScore),
+          departmentBreakdown: deptCounts,
+          levelBreakdown: levelCounts,
+          monthlyTrend: [
+            { month: 'Jan', count: 0 },
+            { month: 'Feb', count: 0 },
+            { month: 'Mar', count: totalParticipants }
+          ],
+          anonymizedFeedback: feedbacks.length >= 3 ? feedbacks : [],
+          nonParticipants
+        });
+      } catch (err) {
+        console.error("Dashboard data fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDashboardData();
@@ -82,8 +86,8 @@ const Dashboard: React.FC<DashboardProps> = ({ lang, t, user }) => {
     return Object.entries(data.levelBreakdown).map(([name, value]) => ({ name, value }));
   }, [data]);
 
-  if (loading) return <div className="p-8 text-center text-[#4ddcff] font-medium">Loading analytics...</div>;
-  if (!data) return <div className="p-8 text-center text-gray-500">No data available.</div>;
+  if (loading) return <div className="p-12 text-center text-[#4ddcff] font-bold animate-pulse">Loading Analytics...</div>;
+  if (!data) return <div className="p-12 text-center text-gray-500">Error loading dashboard data.</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 fade-in space-y-8">
@@ -156,7 +160,6 @@ const Dashboard: React.FC<DashboardProps> = ({ lang, t, user }) => {
 
       {/* Feedback & Non-participants */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Anonymized Feedback */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold mb-6">{t.admin.anonymizedTitle}</h3>
           {data.anonymizedFeedback.length > 0 ? (
@@ -176,7 +179,6 @@ const Dashboard: React.FC<DashboardProps> = ({ lang, t, user }) => {
           )}
         </div>
 
-        {/* Non-participants List */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
           <h3 className="text-lg font-bold mb-6">{t.admin.nonParticipantsTitle}</h3>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">

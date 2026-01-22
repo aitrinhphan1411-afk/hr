@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Language, Employee, UserRole } from './types.ts';
 import { translations } from './services/i18n.ts';
@@ -10,13 +9,22 @@ import Header from './components/Header.tsx';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => {
-    const saved = localStorage.getItem('app_lang');
-    return (saved as Language) || Language.VI;
+    try {
+      const saved = localStorage.getItem('app_lang');
+      return (saved as Language) || Language.VI;
+    } catch (e) {
+      return Language.VI;
+    }
   });
 
   const [user, setUser] = useState<Employee | null>(() => {
-    const saved = sessionStorage.getItem('app_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = sessionStorage.getItem('app_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error("Failed to parse user from session:", e);
+      return null;
+    }
   });
 
   const [view, setView] = useState<'LOGIN' | 'SURVEY' | 'DASHBOARD' | 'THANKS'>('LOGIN');
