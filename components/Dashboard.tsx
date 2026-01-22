@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Language, TranslationSchema, Employee, SurveyResponse, DashboardMetrics } from '../types';
-import { supabaseService } from '../services/supabase';
+import { Language, TranslationSchema, Employee, SurveyResponse, DashboardMetrics } from '../types.ts';
+import { supabaseService } from '../services/supabase.ts';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface DashboardProps {
@@ -82,8 +82,8 @@ const Dashboard: React.FC<DashboardProps> = ({ lang, t, user }) => {
     return Object.entries(data.levelBreakdown).map(([name, value]) => ({ name, value }));
   }, [data]);
 
-  if (loading) return <div className="p-8 text-center">Loading analytics...</div>;
-  if (!data) return <div className="p-8 text-center">No data available.</div>;
+  if (loading) return <div className="p-8 text-center text-[#4ddcff] font-medium">Loading analytics...</div>;
+  if (!data) return <div className="p-8 text-center text-gray-500">No data available.</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 fade-in space-y-8">

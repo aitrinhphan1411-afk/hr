@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Language, TranslationSchema, Employee } from '../types';
-import { supabaseService } from '../services/supabase';
+import { Language, TranslationSchema, Employee } from '../types.ts';
+import { supabaseService } from '../services/supabase.ts';
 
 interface SurveyFormProps {
   lang: Language;

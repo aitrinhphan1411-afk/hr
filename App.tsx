@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Language, Employee, UserRole } from './types';
-import { translations } from './services/i18n';
-import Login from './components/Login';
-import SurveyForm from './components/SurveyForm';
-import Dashboard from './components/Dashboard';
-import ThankYou from './components/ThankYou';
-import Header from './components/Header';
+import { Language, Employee, UserRole } from './types.ts';
+import { translations } from './services/i18n.ts';
+import Login from './components/Login.tsx';
+import SurveyForm from './components/SurveyForm.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import ThankYou from './components/ThankYou.tsx';
+import Header from './components/Header.tsx';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => {
